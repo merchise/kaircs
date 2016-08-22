@@ -191,8 +191,7 @@ class BlobWriter(object):
         chunk = self.first_chunk
         meta = chunk.metadata
         meta.size = self.written
-        data = chunk.data
-        chunk.put(meta.header + data)
+        chunk.store()
         self.chunk = None  # avoid more writing
 
 
@@ -242,7 +241,10 @@ class BlobChunk(object):
         assert self.data
         robj = self.riak_obj
         robj.content_type = 'application/octet-stream'
-        robj.encoded_data = self.data
+        if self.index:
+            robj.encoded_data = self.data
+        else:
+            robj.encoded_data = self.metadata.header + self.data
         robj.store(**kwargs)
 
     def get(self):
