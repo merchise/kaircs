@@ -1,8 +1,3 @@
-.. tmpl documentation master file, created by
-   sphinx-quickstart on Tue Apr 30 09:16:03 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 ===============================================
  KairCS - Small File Cloud System over Riak KV
 ===============================================
