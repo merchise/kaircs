@@ -141,19 +141,20 @@ class BlobReader(object):
             yield chunk.content
             i += 1
 
-    def close(self):
+    def close(self, **options):
         self.chunk = None
 
 
 class BlobWriter(object):
-    def __init__(self, blob):
+    def __init__(self, blob, options=None):
         self.blob = blob
         self.metadata = blob.metadata
         self.written = 0
         self.chunk = self.first_chunk = BlobChunk(blob, 0)
         self.chunk_size = 0
+        self.options = dict(options or {})
 
-    def write(self, data):
+    def write(self, data, **options):
         # write to the current chunk until it fills, when the chunk is full
         # write it to the Riak KV backend, and create another chunk to be
         # filled.  Stop when all data is writen.
@@ -173,25 +174,25 @@ class BlobWriter(object):
                     # because we need to append the blob's metadata which
                     # includes the size of the blob, and we don't know that
                     # until the end of the write.
-                    chunk.store()
+                    chunk.store(**dict(self.options, **options))
                 self.chunk = chunk = BlobChunk(self.blob, chunk.index + 1)
                 self.chunk_size = 0
         self.written += size
 
     __call__ = write
 
-    def close(self):
+    def close(self, **options):
         # At this point we know the size the of the blob so we can complete
         # the data of the first chunk and write it.
         if self.chunk_size < Blob.CHUNK_SIZE:
             # The last chunk is still be partially filled, we have to write it
             # now.
-            self.chunk.store()
+            self.chunk.store(**dict(self.options, **options))
 
         chunk = self.first_chunk
         meta = chunk.metadata
         meta.size = self.written
-        chunk.store()
+        chunk.store(**dict(self.options, **options))
         self.chunk = None  # avoid more writing
 
 
@@ -245,6 +246,13 @@ class BlobChunk(object):
             robj.encoded_data = self.data
         else:
             robj.encoded_data = self.metadata.header + self.data
+        # If the 'vsbs' butcket type is a write-once w=1 should be redundant,
+        # but let's be explicit in this case: We expect that that a chunk does
+        # get written often, in fact, we HIGHLY expect a single write under
+        # normal (non failure) operations.  Setting w=1 allows to have lower
+        # latency even if write-once is not set.  At the same time, we will
+        # allow other values for 'w' if needed by the client.
+        kwargs.setdefault('w', 1)
         robj.store(**kwargs)
 
     def get(self):
