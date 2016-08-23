@@ -271,7 +271,7 @@ class BlobChunk(object):
 
     @property
     def riak_obj(self):
-        return self.bucket.get(self.chunk_key)
+        return self.bucket.get(self.chunk_key, r=1)
 
     @property
     def content(self):
