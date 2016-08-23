@@ -83,8 +83,13 @@ class BlobStore(object):
         '''
         result = []
         with self.open(filename, 'r') as blob:
-            for chunk in blob:
+            # I really expect to have less than 20 chunks if you're using this
+            # method... If your files are large and you still use this method,
+            # you're not your friend!
+            chunk = blob.read(20 * Blob.CHUNK_SIZE)
+            while chunk:
                 result.append(chunk)
+                chunk = blob.read(20 * Blob.CHUNK_SIZE)
         return b''.join(result)
 
     def write(self, filename, contents):
@@ -131,15 +136,89 @@ class Blob(object):
 class BlobReader(object):
     def __init__(self, blob):
         self.blob = blob
-        self.chunk = BlobChunk(blob, 0)
+        # Force the first chunk to be read so that metadata is loaded, this
+        # also ensures we can't open a non-existing blob.
+        chunk = BlobChunk(blob, 0)
+        self.current = 0
+        self.chunk_data = chunk.content
+        self.chunk_position = 0
+        self.consumed = 0
+        self.length = blob.length
 
-    def __iter__(self):
-        yield self.chunk.content
-        i, length = 1, self.blob.length
-        while i < length:
-            chunk = BlobChunk(self.blob, i)
-            yield chunk.content
-            i += 1
+    def read(self, size=None):
+        '''Read up-to `size` bytes from the Blob.
+
+        If size is None, negative or zero, default to CHUNK_SIZE.
+
+        The return value may have less than `size` bytes when the end of the
+        blob is reached.  Trying to read once the blob has been fully
+        consumed will return ``b''``.
+
+        '''
+        if self.consumed >= self.blob.metadata.size:
+            return b''
+        consumed = 0
+        size = Blob.CHUNK_SIZE if size is None or size <= 0 else size
+        result = []
+
+        def get():
+            if consumed < size:
+                request = size - consumed
+                data = self.read_current(request)
+                if request and len(data) < request:
+                    # we requested more than what we got, this means the
+                    # current chunk is depleted, so move on to the next one.
+                    self.advance()
+                return data
+            else:
+                return b''
+
+        data = get()
+        while data:
+            result.append(data)
+            consumed += len(data)
+            data = get()
+
+        # The previous loop may end up at the very end of the current chunk,
+        # no more data to read from it, but more chunks after it; however
+        # since `get()` only advances when during true consumption, this would
+        # make the call to read to return b'', so we need to force an advance
+        # in such a case.
+        if self.chunk_position >= len(self.chunk_data):
+            self.advance()
+
+        self.consumed += consumed
+        return b''.join(result)
+
+    def read_current(self, size=None):
+        '''Read from the current chunk in the reader.
+
+        If the current chunk is exhausted, return ``b''``.  This won't advance
+        the current chunk.
+
+        '''
+        size = Blob.CHUNK_SIZE if size is None else size
+        if not size:
+            return b''
+        pos = self.chunk_position
+        res = self.chunk_data[pos:pos + size]
+        self.chunk_position += len(res)
+        return res
+
+    def advance(self):
+        '''Go to the next chunk if possible.
+
+        If there's no next chunk, return False.  If there's a next chunk,
+        advance the readers position to it and return True.
+
+        '''
+        self.current += 1
+        if self.current < self.length:
+            self.chunk_data = BlobChunk(self.blob, self.current).content
+            self.chunk_position = 0
+            return True
+        else:
+            return False
 
     def close(self, **options):
         self.chunk = None
