@@ -16,6 +16,14 @@ from __future__ import (division as _py3_division,
                         print_function as _py3_print,
                         absolute_import as _py3_abs_import)
 
+from kaircs.vsbs import BlobStore
+from hypothesis import given, strategies as s
 
-def test_sanity():
-    pass
+
+@given(s.binary(min_size=1), s.binary(min_size=1))
+def test_can_write_and_read(name, content):
+    store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store')
+    with store.open(name, 'w') as f:
+        f.write(content)
+    with store.open(name, 'r') as f:
+        assert f.read() == content

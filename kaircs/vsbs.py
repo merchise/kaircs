@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------
 # vsbs
 # ---------------------------------------------------------------------
-# Copyright (c) 2016 Merchise Autrement [~º/~] and Contributors
+# Copyright (c) 2016, 2017 Merchise Autrement [~º/~] and Contributors
 # All rights reserved.
 #
 # This is free software; you can redistribute it and/or modify it under the
@@ -46,9 +46,14 @@ class BlobStore(object):
 
         The returned object will have only a `read` or `write` method.
 
+        :param name: The name of the blob.  It cannot be empty.
+        :type name: bytes
+
         '''
         if not isinstance(name, binary_type):
             raise TypeError('Blob names must be bytes')
+        if not name:
+            raise ValueError('Blob name cannot be empty')
         blob = Blob(name, self)
         if mode == 'r':
             return contextlib.closing(BlobReader(blob))
@@ -182,8 +187,8 @@ class BlobReader(object):
         # The previous loop may end up at the very end of the current chunk,
         # no more data to read from it, but more chunks after it; however
         # since `get()` only advances when during true consumption, this would
-        # make the call to read to return b'', so we need to force an advance
-        # in such a case.
+        # make the next call to read to return b'', so we need to force an
+        # advance in such a case.
         if self.chunk_position >= len(self.chunk_data):
             self.advance()
 
