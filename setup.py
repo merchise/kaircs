@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------
 # setup
 # -----------------------------------------------------------------------
-# Copyright (c) 2016 Merchise Autrement [~º/~] and Contributors
+# Copyright (c) 2016, 2017 Merchise Autrement [~º/~] and Contributors
 # All rights reserved.
 #
 # This is free software; you can redistribute it and/or modify it under
@@ -46,7 +46,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'xoutil>=1.7,<1.7.2',
-        'riak>=2.5.2,<2.6',
+        'xoutil>=1.7.10,<1.8',
+        'riak>=2.7,<2.8',
     ],
 )
