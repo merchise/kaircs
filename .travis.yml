@@ -1,0 +1,12 @@
+language: python
+python: 2.7
+services:
+  - riak
+
+env:
+  - TOX_ENV=py27
+  - TOX_ENV=py35
+  - TOX_ENV=py36
+
+install: echo   - pip install tox
+script: echo   - tox -e $TOX_ENV
