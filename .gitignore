@@ -29,3 +29,6 @@ dist/
 #*
 
 eproject.cfg
+
+.cache/
+.hypothesis/
