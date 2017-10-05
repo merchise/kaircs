@@ -46,7 +46,6 @@ class BlobStore(object):
 
         The returned object will have only a `read` or `write` method.
 
-
         '''
         if not isinstance(name, binary_type):
             raise TypeError('Blob names must be bytes')
@@ -71,6 +70,7 @@ class BlobStore(object):
                     chunk = file.read(blocksize)
                 if len(chunk):
                     write(chunk)
+            return write.first_chunk.blob
 
     def read(self, filename):
         '''Read a file in the blob store.
@@ -264,7 +264,7 @@ class BlobWriter(object):
         # At this point we know the size the of the blob so we can complete
         # the data of the first chunk and write it.
         if self.chunk_size < Blob.CHUNK_SIZE:
-            # The last chunk is still be partially filled, we have to write it
+            # The last chunk is still partially filled, we have to write it
             # now.
             self.chunk.store(**dict(self.options, **options))
 
@@ -327,10 +327,10 @@ class BlobChunk(object):
             robj.encoded_data = self.metadata.header + self.data
         # If the 'vsbs' butcket type is a write-once w=1 should be redundant,
         # but let's be explicit in this case: We expect that that a chunk does
-        # get written often, in fact, we HIGHLY expect a single write under
-        # normal (non failure) operations.  Setting w=1 allows to have lower
-        # latency even if write-once is not set.  At the same time, we will
-        # allow other values for 'w' if needed by the client.
+        # not get written often, in fact, we HIGHLY expect a single write
+        # under normal (non failure) operations.  Setting w=1 allows to have
+        # lower latency even if write-once is not set.  At the same time, we
+        # will allow other values for 'w' if needed by the client.
         kwargs.setdefault('w', 1)
         robj.store(**kwargs)
 
