@@ -32,7 +32,7 @@ setup(
     version=version,
     description="A small File Cloud Storage over Riak KV",
     long_description=open(
-        os.path.join(_current_dir, 'docs', 'readme.txt')).read(),
+        os.path.join(_current_dir, 'README.rst')).read(),
     # Get more strings from
     # http://pypi.python.org/pypi?:action=list_classifiers
     classifiers=[
