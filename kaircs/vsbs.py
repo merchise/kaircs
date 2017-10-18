@@ -132,10 +132,10 @@ class Blob(object):
     def delete(self):
         # DELETION IS TOUGH: Since writing a large file requires several
         # writes (chunks), a file may be partially written but yet
-        # inaccessible (the first chunk is the last to be written).  So this
-        # method simply removes the first chunk of the file.  To actually
-        # reclaim space more information is needed.
-        BlobChunk(self, 0).delete()
+        # inaccessible (the first chunk is the last to be written).  We assume
+        # that you delete a file after it's completely written.
+        for i in range(self.lenght):
+            BlobChunk(self, i).delete()
 
 
 class BlobReader(object):
