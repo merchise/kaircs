@@ -39,3 +39,16 @@ def test_can_write_and_read_a_chunk(name):
         f.write(content)
     with store.open(name, 'r') as f:
         assert f.read() == content
+
+
+@given(s.binary(min_size=1), s.binary(min_size=0))
+def test_can_write_and_read_a_large_file(name, padding):
+    import os
+    with open(os.path.join(os.path.dirname(__file__), 'blob'), 'rb') as f:
+        content = f.read() + padding
+    store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store',
+                      bucket_type=None)
+    with store.open(name, 'w') as f:
+        f.write(content)
+    with store.open(name, 'r') as f:
+        assert f.read() == content
