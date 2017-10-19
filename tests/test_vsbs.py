@@ -16,13 +16,25 @@ from __future__ import (division as _py3_division,
                         print_function as _py3_print,
                         absolute_import as _py3_abs_import)
 
-from kaircs.vsbs import BlobStore
+from kaircs.vsbs import BlobStore, Blob
 from hypothesis import given, strategies as s
 
 
 @given(s.binary(min_size=1), s.binary(min_size=1))
 def test_can_write_and_read(name, content):
-    store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store', None)
+    store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store',
+                      bucket_type=None)
+    with store.open(name, 'w') as f:
+        f.write(content)
+    with store.open(name, 'r') as f:
+        assert f.read() == content
+
+
+@given(s.binary(min_size=1))
+def test_can_write_and_read_a_chunk(name):
+    content = 'x' * Blob.CHUNK_SIZE
+    store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store',
+                      bucket_type=None)
     with store.open(name, 'w') as f:
         f.write(content)
     with store.open(name, 'r') as f:
