@@ -274,15 +274,15 @@ class BlobWriter(object):
     def close(self, **options):
         # At this point we know the size the of the blob so we can complete
         # the data of the first chunk and write it.
+        chunk = self.first_chunk
+        meta = chunk.metadata
+        meta.size = self.written
         if self.chunk_size < Blob.CHUNK_SIZE:
             # The last chunk is still partially filled, we have to write it
             # now.
             self.chunk.store(**dict(self.options, **options))
-
-        chunk = self.first_chunk
-        meta = chunk.metadata
-        meta.size = self.written
-        chunk.store(**dict(self.options, **options))
+        if chunk is not self.chunk:
+            chunk.store(**dict(self.options, **options))
         self.chunk = None  # avoid more writing
 
 
