@@ -303,7 +303,7 @@ class BlobMetadata(object):
         else:
             assert msize == self.HEADER_SIZE
             metadata = header
-        # We can assert for equality: this is just one chunk of the blob.
+        # We can't assert for equality: this is just one chunk of the blob.
         assert size >= len(data)
         return metadata, data
 

@@ -51,7 +51,7 @@ is like this::
   record metadata {
 
       uint8 metadata_size;
-      # The size of the metadata excluding this byte.  Currently this
+      # The size of the metadata including this byte.  Currently this
       # is 1 + 8 bytes.
 
       uint64 size_of_the_blob;
