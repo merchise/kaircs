@@ -35,11 +35,17 @@ class BlobStore(object):
         :param nodes: A list of Riak KV nodes to connect to.  See the `nodes`
                       argument of RiakClient.
 
+        :param bucket_type: The name of the bucket type to use for the
+                            store. If None we don't use bucket types.
+
         '''
         from riak import RiakClient
         self.riak = riak = RiakClient(nodes=nodes)
-        bucket_type = riak.bucket_type(bucket_type)
-        self.bucket = bucket_type.bucket(name)
+        if bucket_type:
+            bucket_type = riak.bucket_type(bucket_type)
+            self.bucket = bucket_type.bucket(name)
+        else:
+            self.bucket = riak.bucket(name)
 
     def open(self, name, mode='r'):
         '''Open a Blob within the store to either write or read.
