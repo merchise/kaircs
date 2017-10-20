@@ -16,12 +16,10 @@ from __future__ import (division as _py3_division,
                         print_function as _py3_print,
                         absolute_import as _py3_abs_import)
 
-import pytest
 from kaircs.vsbs import BlobStore, Blob
 from hypothesis import given, example, strategies as s
 
 
-@pytest.mark.xfail()
 def test_write_and_read_empty_file():
     store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store',
                       bucket_type=None)

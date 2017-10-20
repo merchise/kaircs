@@ -124,7 +124,7 @@ class Blob(object):
     @property
     def length(self):
         '''Equal to the amount of chunks needed to store the blob.'''
-        return int(math.ceil(self.size / self.CHUNK_SIZE))
+        return max(1, int(math.ceil(self.size / self.CHUNK_SIZE)))
 
     @property
     def size(self):
@@ -283,6 +283,9 @@ class BlobWriter(object):
             self.chunk.store(**dict(self.options, **options))
         if chunk is not self.chunk:
             chunk.store(**dict(self.options, **options))
+        elif self.chunk_size == 0:
+            assert self.written == 0  # Empty file
+            chunk.store(**dict(self.options, **options))
         self.chunk = None  # avoid more writing
 
 
@@ -329,10 +332,10 @@ class BlobChunk(object):
         self.store(**kwargs)
 
     def store(self, **kwargs):
-        assert self.data
         robj = self.riak_obj
         robj.content_type = 'application/octet-stream'
         if self.index:
+            assert self.data
             robj.encoded_data = self.data
         else:
             robj.encoded_data = self.metadata.header + self.data
