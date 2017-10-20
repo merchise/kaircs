@@ -124,8 +124,7 @@ class Blob(object):
     @property
     def length(self):
         '''Equal to the amount of chunks needed to store the blob.'''
-        meta = self.metadata
-        return int(math.ceil((self.size + meta.metadata_size) / self.CHUNK_SIZE))
+        return int(math.ceil(self.size / self.CHUNK_SIZE))
 
     @property
     def size(self):
