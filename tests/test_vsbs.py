@@ -34,7 +34,7 @@ def test_can_write_and_read(name, content):
 @given(s.binary(min_size=1), s.integers(min_value=1, max_value=4))
 @example(b'one_chunk', 1)
 def test_can_write_and_read_chunks(name, n):
-    content = 'x' * Blob.CHUNK_SIZE * n
+    content = b'x' * Blob.CHUNK_SIZE * n
     store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store',
                       bucket_type=None)
     with store.open(name, 'w') as f:
