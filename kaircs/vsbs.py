@@ -277,7 +277,8 @@ class BlobWriter(object):
         chunk = self.first_chunk
         meta = chunk.metadata
         meta.size = self.written
-        if self.chunk_size < Blob.CHUNK_SIZE:
+        assert self.chunk_size != Blob.CHUNK_SIZE
+        if 0 < self.chunk_size < Blob.CHUNK_SIZE:
             # The last chunk is still partially filled, we have to write it
             # now.
             self.chunk.store(**dict(self.options, **options))
