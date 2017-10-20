@@ -17,7 +17,7 @@ from __future__ import (division as _py3_division,
                         absolute_import as _py3_abs_import)
 
 from kaircs.vsbs import BlobStore, Blob
-from hypothesis import given, strategies as s
+from hypothesis import given, example, strategies as s
 
 
 @given(s.binary(min_size=1), s.binary(min_size=1))
@@ -26,19 +26,22 @@ def test_can_write_and_read(name, content):
                       bucket_type=None)
     with store.open(name, 'w') as f:
         f.write(content)
-    with store.open(name, 'r') as f:
-        assert f.read() == content
+    retrieved = store.read(name)
+    assert len(retrieved) == len(content)
+    assert retrieved == content
 
 
-@given(s.binary(min_size=1))
-def test_can_write_and_read_a_chunk(name):
-    content = 'x' * Blob.CHUNK_SIZE
+@given(s.binary(min_size=1), s.integers(min_value=1, max_value=4))
+@example(b'one_chunk', 1)
+def test_can_write_and_read_chunks(name, n):
+    content = 'x' * Blob.CHUNK_SIZE * n
     store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store',
                       bucket_type=None)
     with store.open(name, 'w') as f:
         f.write(content)
-    with store.open(name, 'r') as f:
-        assert f.read() == content
+    retrieved = store.read(name)
+    assert len(retrieved) == len(content)
+    assert retrieved == content
 
 
 @given(s.binary(min_size=1), s.binary(min_size=0))
@@ -50,5 +53,6 @@ def test_can_write_and_read_a_large_file(name, padding):
                       bucket_type=None)
     with store.open(name, 'w') as f:
         f.write(content)
-    with store.open(name, 'r') as f:
-        assert f.read() == content
+    retrieved = store.read(name)
+    assert len(retrieved) == len(content)
+    assert retrieved == content
