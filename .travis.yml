@@ -8,5 +8,5 @@ env:
   - TOX_ENV=py35
   - TOX_ENV=py36
 
-install: echo   - pip install tox
-script: echo   - tox -e $TOX_ENV
+install: pip install tox
+script: tox -e $TOX_ENV
