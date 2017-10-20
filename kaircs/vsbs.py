@@ -124,8 +124,7 @@ class Blob(object):
     @property
     def length(self):
         '''Equal to the amount of chunks needed to store the blob.'''
-        meta = self.metadata
-        return int(math.ceil((self.size + meta.metadata_size) / self.CHUNK_SIZE))
+        return max(1, int(math.ceil(self.size / self.CHUNK_SIZE)))
 
     @property
     def size(self):
@@ -274,15 +273,19 @@ class BlobWriter(object):
     def close(self, **options):
         # At this point we know the size the of the blob so we can complete
         # the data of the first chunk and write it.
-        if self.chunk_size < Blob.CHUNK_SIZE:
-            # The last chunk is still partially filled, we have to write it
-            # now.
-            self.chunk.store(**dict(self.options, **options))
-
         chunk = self.first_chunk
         meta = chunk.metadata
         meta.size = self.written
-        chunk.store(**dict(self.options, **options))
+        assert self.chunk_size != Blob.CHUNK_SIZE
+        if 0 < self.chunk_size < Blob.CHUNK_SIZE:
+            # The last chunk is still partially filled, we have to write it
+            # now.
+            self.chunk.store(**dict(self.options, **options))
+        if chunk is not self.chunk:
+            chunk.store(**dict(self.options, **options))
+        elif self.chunk_size == 0:
+            assert self.written == 0  # Empty file
+            chunk.store(**dict(self.options, **options))
         self.chunk = None  # avoid more writing
 
 
@@ -329,10 +332,10 @@ class BlobChunk(object):
         self.store(**kwargs)
 
     def store(self, **kwargs):
-        assert self.data
         robj = self.riak_obj
         robj.content_type = 'application/octet-stream'
         if self.index:
+            assert self.data
             robj.encoded_data = self.data
         else:
             robj.encoded_data = self.metadata.header + self.data
