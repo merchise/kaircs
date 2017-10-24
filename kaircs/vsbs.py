@@ -29,18 +29,21 @@ from xoutil.eight import binary_type
 
 
 class BlobStore(object):
-    def __init__(self, nodes, name, bucket_type='vsbs'):
+    def __init__(self, backend, name, bucket_type='vsbs'):
         '''A Very Simple Blob Store.
 
-        :param nodes: A list of Riak KV nodes to connect to.  See the `nodes`
-                      argument of RiakClient.
+        :param backend: A `<RiakClient>`:class:. or a list of Riak KV nodes to
+                        connect to. See the `nodes` argument of RiakClient.
 
         :param bucket_type: The name of the bucket type to use for the
                             store. If None we don't use bucket types.
 
         '''
         from riak import RiakClient
-        self.riak = riak = RiakClient(nodes=nodes)
+        if isinstance(backend, RiakClient):
+            self.riak = riak = backend
+        else:
+            self.riak = riak = RiakClient(**backend)
         if bucket_type:
             bucket_type = riak.bucket_type(bucket_type)
             self.bucket = bucket_type.bucket(name)

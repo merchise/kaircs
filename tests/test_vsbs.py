@@ -21,7 +21,7 @@ from hypothesis import given, example, strategies as s
 
 
 def test_write_and_read_empty_file():
-    store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store',
+    store = BlobStore({'host': '127.0.0.1', 'http_port': 8098}, 'store',
                       bucket_type=None)
     name = b'file'
     content = b''
@@ -34,7 +34,7 @@ def test_write_and_read_empty_file():
 
 @given(s.binary(min_size=1), s.binary(min_size=1))
 def test_can_write_and_read(name, content):
-    store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store',
+    store = BlobStore({'host': '127.0.0.1', 'http_port': 8098}, 'store',
                       bucket_type=None)
     with store.open(name, 'w') as f:
         f.write(content)
@@ -47,7 +47,7 @@ def test_can_write_and_read(name, content):
 @example(b'one_chunk', 1)
 def test_can_write_and_read_chunks(name, n):
     content = b'x' * Blob.CHUNK_SIZE * n
-    store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store',
+    store = BlobStore({'host': '127.0.0.1', 'http_port': 8098}, 'store',
                       bucket_type=None)
     with store.open(name, 'w') as f:
         f.write(content)
@@ -61,7 +61,7 @@ def test_can_write_and_read_a_large_file(name, padding):
     import os
     with open(os.path.join(os.path.dirname(__file__), 'blob'), 'rb') as f:
         content = f.read() + padding
-    store = BlobStore([{'host': '127.0.0.1', 'http_port': 8098}], 'store',
+    store = BlobStore({'host': '127.0.0.1', 'http_port': 8098}, 'store',
                       bucket_type=None)
     with store.open(name, 'w') as f:
         f.write(content)
