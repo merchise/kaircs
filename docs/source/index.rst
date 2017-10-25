@@ -37,7 +37,7 @@ in the store.  In fact, this layer support only two operations:
 - Write a blob
 - Read a blob from begin to end
 
-The `KiarCS Service`_ leverage these function to provide *some*
+The `KairCS Service`_ leverage these function to provide *some*
 support for listing and deletion.
 
 When storing a blob, you must provide a name which is used to create a
@@ -70,7 +70,7 @@ just need the name.
 VSBS store the chunks in Riak KV.
 
 
-KiarCS Service
+KairCS Service
 --------------
 
 This is higher level component.  It exposes a REST API over HTTP/1.1:
@@ -112,6 +112,9 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :glob:
+
+   ./*
 
 
 
