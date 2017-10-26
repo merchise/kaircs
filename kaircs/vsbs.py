@@ -149,7 +149,7 @@ class Blob(object):
         # writes (chunks), a file may be partially written but yet
         # inaccessible (the first chunk is the last to be written).  We assume
         # that you delete a file after it's completely written.
-        for i in range(self.lenght):
+        for i in range(self.length):
             BlobChunk(self, i).delete()
 
 
