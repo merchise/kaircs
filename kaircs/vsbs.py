@@ -29,18 +29,22 @@ from xoutil.eight import binary_type
 
 
 class BlobStore(object):
-    def __init__(self, nodes, name, bucket_type='vsbs'):
-        '''A Very Simple Blob Store.
+    '''A Very Simple Blob Store.
 
-        :param nodes: A list of Riak KV nodes to connect to.  See the `nodes`
-                      argument of RiakClient.
+    :param backend: A `<RiakClient>`:class:. or a list of Riak KV nodes to
+                    connect to. See the `nodes` argument of RiakClient.
 
-        :param bucket_type: The name of the bucket type to use for the
-                            store. If None we don't use bucket types.
+    :param bucket_type: The name of the bucket type to use for the
+                        store. If None we don't use bucket types.
 
-        '''
+    '''
+
+    def __init__(self, backend, name, bucket_type='vsbs'):
         from riak import RiakClient
-        self.riak = riak = RiakClient(nodes=nodes)
+        if isinstance(backend, RiakClient):
+            self.riak = riak = backend
+        else:
+            self.riak = riak = RiakClient(**backend)
         if bucket_type:
             bucket_type = riak.bucket_type(bucket_type)
             self.bucket = bucket_type.bucket(name)
@@ -50,7 +54,8 @@ class BlobStore(object):
     def open(self, name, mode='r'):
         '''Open a Blob within the store to either write or read.
 
-        The returned object will have only a `read` or `write` method.
+        The returned object will have only a `read <BlobReader.read>`:meth: or
+        `write <BlobReader.write>`:meth: method.
 
         :param name: The name of the blob.  It cannot be empty.
         :type name: bytes
@@ -109,10 +114,12 @@ class BlobStore(object):
             write(contents)
 
     def delete(self, name):
+        '''Delete a blob.'''
         Blob(name, self).delete()
 
 
 class Blob(object):
+    #: The maximum length of data (bytes) in a chunk
     CHUNK_SIZE = int(1.05 * 1024 * 1024)
 
     def __init__(self, name, store):
@@ -128,6 +135,9 @@ class Blob(object):
 
     @property
     def size(self):
+        if self.metadata.size is None:
+            # Force the read so that metadata get's its size.
+            BlobChunk(self, 0).content
         return self.metadata.size
 
     @property
@@ -139,7 +149,7 @@ class Blob(object):
         # writes (chunks), a file may be partially written but yet
         # inaccessible (the first chunk is the last to be written).  We assume
         # that you delete a file after it's completely written.
-        for i in range(self.lenght):
+        for i in range(self.length):
             BlobChunk(self, i).delete()
 
 
@@ -158,7 +168,7 @@ class BlobReader(object):
     def read(self, size=None):
         '''Read up-to `size` bytes from the Blob.
 
-        If size is None, negative or zero, default to CHUNK_SIZE.
+        If size is None, negative or zero, default to `Blob.CHUNK_SIZE`:data:.
 
         The return value may have less than `size` bytes when the end of the
         blob is reached.  Trying to read once the blob has been fully
@@ -244,6 +254,15 @@ class BlobWriter(object):
         self.options = dict(options or {})
 
     def write(self, data, **options):
+        '''Write `data` to the blob.
+
+        :param options: Low level options passed to the ``store`` method of
+                        the riak object.
+
+                        .. warning:: In the future, we may restrict which keys
+                           are allowed.  We set ``w=1`` by default.
+
+        '''
         # write to the current chunk until it fills, when the chunk is full
         # write it to the Riak KV backend, and create another chunk to be
         # filled.  Stop when all data is writen.
