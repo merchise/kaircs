@@ -135,6 +135,9 @@ class Blob(object):
 
     @property
     def size(self):
+        if self.metadata.size is None:
+            # Force the read so that metadata get's its size.
+            BlobChunk(self, 0).content
         return self.metadata.size
 
     @property
