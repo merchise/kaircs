@@ -26,7 +26,7 @@ from flask import Flask, request
 from werkzeug.wrappers import Response
 from werkzeug.exceptions import NotFound, BadRequest
 
-from xoutil.string import safe_encode
+from xoutil.future.codecs import safe_encode
 from xoutil.fp.tools import compose
 
 from .fs import FileSystem, basename, dirname
