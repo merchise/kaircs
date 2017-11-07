@@ -24,7 +24,7 @@ from functools import partial
 from flask import Flask, request
 
 from werkzeug.wrappers import Response
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, BadRequest
 
 from xoutil.string import safe_encode
 from xoutil.fp.tools import compose
@@ -63,11 +63,7 @@ class KairCSApplication(Flask):
     def PUT(self, path):
         dir = dirname(path)
         if self.exists(path) and self.isdir(path):
-            return Response(
-                '<h1>Bad Request</h1>',
-                status=400,
-                mimetype='text/html'
-            )
+            raise BadRequest
         self.mkdir(dir, exists_ok=True)
         with self.open(path, 'w') as file:
             chunk_size = 4096  # FIXME: this should be a configuration option
