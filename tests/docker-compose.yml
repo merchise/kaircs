@@ -5,6 +5,7 @@ services:
     ports:
       - "8087:8087"
       - "8098:8098"
+      - "4369:4369"
     environment:
       - CLUSTER_NAME=riakkv
     labels:
