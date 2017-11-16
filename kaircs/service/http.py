@@ -151,7 +151,7 @@ def main():
     fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
                     'store', dir_bucket_type='maps')
     app = KairCSApplication(fs)
-    app.run()
+    app.run(host="0.0.0.0")
 
 
 if __name__ == '__main__':
