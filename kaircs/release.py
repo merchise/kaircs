@@ -1,20 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------------------------------
-# kaircs.release
-# -----------------------------------------------------------------------
-# Copyright (c) 2016 Merchise Autrement [~º/~] and Contributors
+# ---------------------------------------------------------------------
+# Copyright (c) Merchise Autrement [~º/~] and Contributors
 # All rights reserved.
 #
-# This is free software; you can redistribute it and/or modify it under
-# the terms of the LICENCE attached in the distribution package.
+# This is free software; you can do what the LICENCE file allows you to.
 #
-# Created on 2016-08-17
-
 
 from __future__ import (division as _py3_division,
                         print_function as _py3_print,
-                        unicode_literals as _py3_unicode,
                         absolute_import as _py3_abs_imports)
 
 
@@ -29,7 +23,7 @@ def dev_tag_installed():
         # FIX: Below line is not working anymore
         base = dist.parsed_version.base_version
         return full_version[len(base):]
-    except:
+    except Exception:
         return None
 
 
@@ -41,6 +35,7 @@ def safe_int(x):
         return int(x)
     except ValueError:
         return x
+
 
 # I won't put the release tag in the version_info tuple.  Since PEP440 is on
 # the way.
