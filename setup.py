@@ -41,7 +41,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'xoutil>=1.7.10,<1.9',
+        'xoutil>=1.8.0,<1.9',
         'riak>=2.7,<2.8',
+        'flask>=0.12.2',
     ],
 )
