@@ -28,8 +28,6 @@ KairCS is split in two main components:
 KairCS Very Simple Blob Store (VSBS)
 ------------------------------------
 
-.. module:: kaircs.vsbs
-
 It's responsible to actually manage the storage of blobs.  It DOES NOT
 keep any notion of directories so there's no way to list all the blobs
 in the store.  In fact, this layer support only two operations:
