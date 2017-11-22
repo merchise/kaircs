@@ -38,7 +38,7 @@ clean_build:
   stage: publish
   script:
     - rm -f dist/*
-  tag:
+  tags:
     - python
   when: always
   allow_failure: true
