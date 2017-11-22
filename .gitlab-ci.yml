@@ -35,7 +35,7 @@ publish_pypi:
 
 
 clean_build:
-  stage: publish
+  stage: clean
   script:
     - rm -f dist/*
   tags:
