@@ -1,17 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# -----------------------------------------------------------------------
-# setup
-# -----------------------------------------------------------------------
-# Copyright (c) 2016, 2017 Merchise Autrement [~º/~] and Contributors
+# ---------------------------------------------------------------------
+# Copyright (c) Merchise Autrement [~º/~] and Contributors
 # All rights reserved.
 #
-# This is free software; you can redistribute it and/or modify it under
-# the terms of the LICENCE attached in the distribution package.
+# This is free software; you can do what the LICENCE file allows you to.
 #
-# Created on 2016-08-17
 # flake8: noqa
-
 
 from __future__ import (division as _py3_division,
                         print_function as _py3_print,
@@ -46,8 +41,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'xoutil>=1.8.0.rc1,<1.9',
+        'xoutil>=1.8.0,<1.9',
         'riak>=2.7,<2.8',
-        'flask',
+        'flask>=0.12.2',
     ],
 )

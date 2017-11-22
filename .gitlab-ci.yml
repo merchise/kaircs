@@ -1,0 +1,44 @@
+---
+stages:
+  - build
+  - publish
+  - clean
+
+build:
+  stage: build
+  script:
+    - rm -f dist/*
+    - python setup.py sdist
+    - python setup.py bdist_wheel
+  tags:
+    - python
+
+publish_locally:
+  stage: publish
+  script:
+    - ssh gestion.lahavane.com "mkdir -p Repos/kaircs"
+    - scp dist/* manu@gestion.lahavane.com:Repos/kaircs/
+  tags:
+    - python
+  only:
+    - tags
+
+
+publish_pypi:
+  stage: publish
+  script:
+    - twine upload dist/*
+  tags:
+    - python
+  only:
+    - tags
+
+
+clean_build:
+  stage: publish
+  script:
+    - rm -f dist/*
+  tags:
+    - python
+  when: always
+  allow_failure: true
