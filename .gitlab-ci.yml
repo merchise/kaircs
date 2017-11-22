@@ -40,7 +40,7 @@ build binary distribution:
 publish_locally:
   stage: publish
   script:
-    - ssh gestion.lahavane.com "mkdir -p Repos/kaircs"
+    - ssh manu@gestion.lahavane.com "mkdir -p Repos/kaircs"
     - scp dist/* manu@gestion.lahavane.com:Repos/kaircs/
   tags:
     - repo.lahavane.com
