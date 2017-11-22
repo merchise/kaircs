@@ -1,17 +1,41 @@
 ---
 stages:
+  - check
   - build
   - publish
   - clean
 
-build:
+check signature of tag:
+  stage: check
+  script:
+    - git verify-tag $CI_COMMIT_REF_NAME
+  tags:
+    - git
+    - gpg
+  only:
+    - tags
+
+build source distribution:
   stage: build
   script:
     - rm -f dist/*
     - python setup.py sdist
-    - python setup.py bdist_wheel
   tags:
     - python
+  artifacts:
+    paths:
+      - dist/
+
+build binary distribution:
+  stage: build
+  script:
+    - rm -f dist/*
+    - python setup.py bdist_wheel
+  tags:
+    - wheel
+  artifacts:
+    paths:
+      - dist/
 
 publish_locally:
   stage: publish
@@ -19,9 +43,13 @@ publish_locally:
     - ssh gestion.lahavane.com "mkdir -p Repos/kaircs"
     - scp dist/* manu@gestion.lahavane.com:Repos/kaircs/
   tags:
-    - python
+    - repo.lahavane.com
   only:
     - tags
+  dependencies:
+    - check signature of tag
+    - build source distribution
+    - build binary distribution
 
 
 publish_pypi:
@@ -29,9 +57,16 @@ publish_pypi:
   script:
     - twine upload dist/*
   tags:
-    - python
+    - twine
   only:
     - tags
+  dependencies:
+    - check signature of tag
+    - build source distribution
+    - build binary distribution
+  environment:
+    name: pypi
+    url: https://pypi.python.org/pypi/kaircs
 
 
 clean_build:
@@ -42,3 +77,6 @@ clean_build:
     - python
   when: always
   allow_failure: true
+  dependencies:
+    - build source distribution
+    - build binary distribution
