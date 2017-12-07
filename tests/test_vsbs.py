@@ -20,6 +20,24 @@ from kaircs.vsbs import BlobStore, Blob
 from hypothesis import given, example, strategies as s
 
 
+def test_writer_reader_close_method():
+    store = BlobStore({'host': '127.0.0.1', 'http_port': 8098},
+                      'test_writer_reader_close_method',
+                      bucket_type=None)
+    name = b'file'
+    content = b'This is cool file'
+    f = store.open(name, 'w')
+    try:
+        f.write(content)
+    finally:
+        f.close()
+    f = store.open(name, 'r')
+    try:
+        assert f.read() == content
+    finally:
+        f.close()
+
+
 def test_write_and_read_empty_file():
     store = BlobStore({'host': '127.0.0.1', 'http_port': 8098}, 'store',
                       bucket_type=None)

@@ -18,7 +18,6 @@ from __future__ import (division as _py3_division,
 import math
 import hashlib
 import struct
-import contextlib
 
 from xoutil.eight import binary_type
 
@@ -62,9 +61,9 @@ class BlobStore(object):
             raise ValueError('Blob name cannot be empty')
         blob = Blob(name, self)
         if mode == 'r':
-            return contextlib.closing(BlobReader(blob))
+            return BlobReader(blob)
         elif mode == 'w':
-            return contextlib.closing(BlobWriter(blob))
+            return BlobWriter(blob)
         else:
             raise ValueError('mode must be r or w')
 
@@ -148,7 +147,15 @@ class Blob(object):
             BlobChunk(self, i).delete()
 
 
-class BlobReader(object):
+class ClosingContextManager(object):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        return self.close()
+
+
+class BlobReader(ClosingContextManager):
     def __init__(self, blob):
         self.blob = blob
         # Force the first chunk to be read so that metadata is loaded, this
@@ -239,7 +246,7 @@ class BlobReader(object):
         self.chunk = None
 
 
-class BlobWriter(object):
+class BlobWriter(ClosingContextManager):
     def __init__(self, blob, options=None):
         self.blob = blob
         self.metadata = blob.metadata
