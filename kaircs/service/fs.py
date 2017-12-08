@@ -89,8 +89,11 @@ class FileSystem(object):
                     raise EnvironmentError(
                         '"%s": No such file or directory' % parent.name
                     )
-            elif not exist_ok:
-                raise EnvironmentError('Entry "%s" already exists' % name)
+            else:
+                if not self.isdir(directory.name):
+                    raise EnvironmentError('File "%s" already exists' % name)
+                elif not exists_ok:
+                    raise EnvironmentError('Entry "%s" already exists' % name)
             return directory
 
         _mkdir(name=name, traverse=traverse, exists_ok=exist_ok)
