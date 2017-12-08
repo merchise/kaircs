@@ -70,6 +70,18 @@ class FileSystem(object):
 
         _mkdir(name=name, traverse=traverse, exists_ok=exists_ok)
 
+    def put(self, filename, name=None):
+        from ..vsbs import Blob
+        blocksize = 4*Blob.CHUNK_SIZE
+        with open(filename, 'rb') as file:
+            with self.open(name or filename, 'w') as write:
+                chunk = file.read(blocksize)
+                while len(chunk) == blocksize:
+                    write(chunk)
+                    chunk = file.read(blocksize)
+                if len(chunk):
+                    write(chunk)
+
     def exists(self, path):
         '''Test if a path exists.
 
