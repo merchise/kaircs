@@ -7,4 +7,7 @@ services:
   - riak
 
 install: pip install tox
-script: tox -e system
+script:
+  - riak-admin bucket-type create maps "{'props':{'datatype': 'map'}}"
+  - riak-admin bucket-type create vsbs "{'props':{'w': 1,'dw': 1,'r': 1}}"
+  - tox -e system
