@@ -25,7 +25,7 @@ from hypothesis import given, strategies as s, settings
 
 @s.composite
 def path_components(draw, from_=s.text(alphabet='abcd', min_size=1)):
-    from xoutil.string import safe_encode
+    from xoutil.future.codecs import safe_encode
     return safe_encode(draw(from_))
 
 
