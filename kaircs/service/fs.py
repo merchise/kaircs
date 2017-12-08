@@ -15,7 +15,7 @@ from __future__ import (division as _py3_division,
 import os
 from kaircs.vsbs import BlobStore
 
-ROOT = '/'
+ROOT = b'/'
 
 
 class FileSystem(object):
@@ -42,8 +42,9 @@ class FileSystem(object):
         dir_bucket_type = self.riak.bucket_type(dir_bucket_type)
         self.dirs = dir_bucket_type.bucket(dirs_store_name)
         # Create root if it doesn't exists
-        self.mkdir('/', exists_ok=True)
-        self.root = Directory('/', self)
+        self.mkdir(ROOT, exists_ok=True)
+        self.root = Directory(ROOT, self)
+
     def close(self):
         self.files.close()
         self.riak.close()
@@ -273,12 +274,13 @@ class Directory(Entry):
         return basename(item.name) in self.children
 
     def __setitem__(self, key, value):
+        from xoutil.future.codecs import safe_encode
         if isinstance(key, Entry):
             dirname, basename = split(key.name)
             assert dirname == self.name
         else:
             basename = key
-        assert os.path.sep not in basename
+        assert safe_encode(os.path.sep) not in basename
         assert isinstance(value, Entry)
         self.registers[basename].assign(value.hash)
         self.registers.map.store()
@@ -348,4 +350,5 @@ def normalize(path):
 
     '''
     from os.path import realpath, normpath
-    return realpath(normpath(path))
+    from xoutil.future.codecs import safe_encode
+    return safe_encode(realpath(normpath(path)))
