@@ -15,7 +15,7 @@ from __future__ import (division as _py3_division,
 import os
 from kaircs.vsbs import BlobStore
 
-ROOT = '/'
+ROOT = b'/'
 
 
 class FileSystem(object):
@@ -42,15 +42,34 @@ class FileSystem(object):
         dir_bucket_type = self.riak.bucket_type(dir_bucket_type)
         self.dirs = dir_bucket_type.bucket(dirs_store_name)
         # Create root if it doesn't exists
-        self.mkdir('/', exists_ok=True)
-        self.root = Directory('/', self)
+        self.mkdir(ROOT, exists_ok=True)
+        self.root = Directory(ROOT, self)
 
-    def mkdir(self, name, traverse=True, exists_ok=False):
-        '''Create directory using name.
+    def close(self):
+        self.files.close()
+        self.riak.close()
 
-        Raise `EnvironmentError`:class: if exists_ok is False and directory
-        exists.
+    def __del__(self):
+        self.close()
+
+    def mkdir(self, name, traverse=True, *args, **kwargs):
+        '''Create directory under `name`.
+
+        If `traverse` is True create the structure as needed.
+
+        If `exist_ok` is True don't fail if the directory already exists.
+        If `exist_ok` is False and the directory exists, raise an
+        EnvironmentError.
+
+        .. versionchanged:: 0.3.0 The argument `exists_ok` is renamed to
+           `exist_ok` (so that it's similar to the standard library).  We keep
+           `exists_ok`, but it will be removed in a future release.
+
         '''
+        from xoutil.params import ParamManager
+        pm = ParamManager(args, kwargs)
+        exist_ok = pm(0, 'exist_ok', 'exists_ok', default=False)
+
         def _mkdir(name, traverse, exists_ok):
             if not name.startswith(ROOT):
                 raise ValueError('Cannot create relative path "%s"' % name)
@@ -58,17 +77,42 @@ class FileSystem(object):
             if not self.exists(directory.name):
                 parent = directory.parent
                 if traverse and directory != self.root:
-                    parent = _mkdir(parent.name, traverse=traverse, exists_ok=True)
+                    parent = _mkdir(
+                        parent.name,
+                        traverse=traverse,
+                        exists_ok=True
+                    )
                 if self.exists(parent.name):
                     base = basename(name)
                     parent[base] = directory
                 else:
-                    raise EnvironmentError('"%s": No such file or directory' % parent.name)
-            elif not exists_ok:
-                raise EnvironmentError('Entry "%s" already exists' % name)
+                    raise EnvironmentError(
+                        '"%s": No such file or directory' % parent.name
+                    )
+            else:
+                if not self.isdir(directory.name):
+                    raise EnvironmentError('File "%s" already exists' % name)
+                elif not exists_ok:
+                    raise EnvironmentError('Entry "%s" already exists' % name)
             return directory
 
-        _mkdir(name=name, traverse=traverse, exists_ok=exists_ok)
+        _mkdir(name=name, traverse=traverse, exists_ok=exist_ok)
+
+    def put(self, filename, name=None):
+        from ..vsbs import Blob
+        if not name:
+            name = filename
+        blocksize = 4*Blob.CHUNK_SIZE
+        with open(filename, 'rb') as file:
+            parent = dirname(name)
+            self.mkdir(parent, traverse=True, exist_ok=True)
+            with self.open(name, 'w') as write:
+                chunk = file.read(blocksize)
+                while len(chunk) == blocksize:
+                    write(chunk)
+                    chunk = file.read(blocksize)
+                if len(chunk):
+                    write(chunk)
 
     def exists(self, path):
         '''Test if a path exists.
@@ -237,12 +281,13 @@ class Directory(Entry):
         return basename(item.name) in self.children
 
     def __setitem__(self, key, value):
+        from xoutil.future.codecs import safe_encode
         if isinstance(key, Entry):
             dirname, basename = split(key.name)
             assert dirname == self.name
         else:
             basename = key
-        assert os.path.sep not in basename
+        assert safe_encode(os.path.sep) not in basename
         assert isinstance(value, Entry)
         self.registers[basename].assign(value.hash)
         self.registers.map.store()
@@ -312,4 +357,5 @@ def normalize(path):
 
     '''
     from os.path import realpath, normpath
-    return realpath(normpath(path))
+    from xoutil.future.codecs import safe_encode
+    return safe_encode(realpath(normpath(path)))

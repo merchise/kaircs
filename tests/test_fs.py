@@ -20,13 +20,12 @@ from __future__ import (division as _py3_division,
 import pytest
 
 from kaircs.service.fs import FileSystem
-from hypothesis import given, strategies as s
-
+from hypothesis import given, strategies as s, settings
 
 
 @s.composite
 def path_components(draw, from_=s.text(alphabet='abcd', min_size=1)):
-    from xoutil.string import safe_encode
+    from xoutil.future.codecs import safe_encode
     return safe_encode(draw(from_))
 
 
@@ -37,15 +36,20 @@ def paths(draw, min_size=1, max_size=3, components=path_components()):
 
 
 @given(paths())
+@settings(max_examples=10)
 def test_traverse_mkdir(path):
-    fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}], 'test_traverse_mkdir', dir_bucket_type='maps')
+    fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
+                    'test_traverse_mkdir', dir_bucket_type='maps')
     fs.mkdir(path, exists_ok=True)
     assert fs.isdir(path) and fs.exists(path)
+    fs.close()
 
 
 @given(paths(min_size=3, max_size=6))
+@settings(max_examples=10)
 def test_non_traverse_mkdir(path):
-    fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}], 'test_non_traverse_mkdir', dir_bucket_type='maps')
+    fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
+                    'test_non_traverse_mkdir', dir_bucket_type='maps')
     with pytest.raises(EnvironmentError) as excinfo:
         fs.mkdir(path, traverse=False)
     assert 'No such file or directory' in str(excinfo.value)
@@ -53,6 +57,7 @@ def test_non_traverse_mkdir(path):
 
 
 @given(paths())
+@settings(max_examples=10)
 def test_already_exists_mkdir(path):
     fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
                     'test_already_exists_mkdir', dir_bucket_type='maps')
@@ -61,18 +66,22 @@ def test_already_exists_mkdir(path):
         fs.mkdir(path)
     assert 'already exists' in str(excinfo.value)
     assert fs.exists(path)
+    fs.close()
 
 
 @given(paths())
+@settings(max_examples=10)
 def test_rm_dir(path):
     fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
                     'test_rm_dir', dir_bucket_type='maps')
     fs.mkdir(path, exists_ok=True)
     fs.rm(path, recursive=True)
     assert not fs.exists(path)
+    fs.close()
 
 
 @given(paths())
+@settings(max_examples=10)
 def test_rm_file(path):
     import os
     fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
@@ -84,9 +93,11 @@ def test_rm_file(path):
         f.write(content)
     fs.rm(fpath)
     assert not fs.exists(fpath)
+    fs.close()
 
 
 @given(paths())
+@settings(max_examples=10)
 def test_open(path):
     import os
     fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
@@ -97,9 +108,25 @@ def test_open(path):
     with fs.open(fpath, 'w') as f:
         f.write(content)
     assert fs.cat(fpath) == content
+    fs.close()
+
+
+@given(paths(min_size=2))
+@settings(max_examples=10)
+def test_put(path):
+    import os.path
+    filename = os.path.join(os.path.dirname(__file__), 'blob')
+    fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
+                    'test_put', dir_bucket_type='maps')
+    fs.put(filename, name=path)
+    with open(filename, 'rb') as f:
+        contents = f.read()
+    assert fs.cat(path) == contents
+    fs.close()
 
 
 @given(paths())
+@settings(max_examples=10)
 def test_concurrent_read(path):
     import os
     fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
@@ -121,3 +148,4 @@ def test_concurrent_read(path):
                 fc1 = f.read(10)
                 fc2 = j.read(10)
             assert c1 == c2
+    fs.close()

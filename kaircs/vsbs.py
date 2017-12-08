@@ -37,13 +37,22 @@ class BlobStore(object):
         from riak import RiakClient
         if isinstance(backend, RiakClient):
             self.riak = riak = backend
+            self.owns_riak = False
         else:
             self.riak = riak = RiakClient(**backend)
+            self.owns_riak = True
         if bucket_type:
             bucket_type = riak.bucket_type(bucket_type)
             self.bucket = bucket_type.bucket(name)
         else:
             self.bucket = riak.bucket(name)
+
+    def close(self):
+        if self.owns_riak:
+            self.riak.close()
+
+    def __del__(self):
+        self.close()
 
     def open(self, name, mode='r'):
         '''Open a Blob within the store to either write or read.
