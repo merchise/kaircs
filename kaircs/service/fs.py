@@ -45,12 +45,24 @@ class FileSystem(object):
         self.mkdir('/', exists_ok=True)
         self.root = Directory('/', self)
 
-    def mkdir(self, name, traverse=True, exists_ok=False):
-        '''Create directory using name.
+    def mkdir(self, name, traverse=True, *args, **kwargs):
+        '''Create directory under `name`.
 
-        Raise `EnvironmentError`:class: if exists_ok is False and directory
-        exists.
+        If `traverse` is True create the structure as needed.
+
+        If `exist_ok` is True don't fail if the directory already exists.
+        If `exist_ok` is False and the directory exists, raise an
+        EnvironmentError.
+
+        .. versionchanged:: 0.3.0 The argument `exists_ok` is renamed to
+           `exist_ok` (so that it's similar to the standard library).  We keep
+           `exists_ok`, but it will be removed in a future release.
+
         '''
+        from xoutil.params import ParamManager
+        pm = ParamManager(args, kwargs)
+        exist_ok = pm(0, 'exist_ok', 'exists_ok', default=False)
+
         def _mkdir(name, traverse, exists_ok):
             if not name.startswith(ROOT):
                 raise ValueError('Cannot create relative path "%s"' % name)
@@ -58,17 +70,23 @@ class FileSystem(object):
             if not self.exists(directory.name):
                 parent = directory.parent
                 if traverse and directory != self.root:
-                    parent = _mkdir(parent.name, traverse=traverse, exists_ok=True)
+                    parent = _mkdir(
+                        parent.name,
+                        traverse=traverse,
+                        exists_ok=True
+                    )
                 if self.exists(parent.name):
                     base = basename(name)
                     parent[base] = directory
                 else:
-                    raise EnvironmentError('"%s": No such file or directory' % parent.name)
-            elif not exists_ok:
+                    raise EnvironmentError(
+                        '"%s": No such file or directory' % parent.name
+                    )
+            elif not exist_ok:
                 raise EnvironmentError('Entry "%s" already exists' % name)
             return directory
 
-        _mkdir(name=name, traverse=traverse, exists_ok=exists_ok)
+        _mkdir(name=name, traverse=traverse, exists_ok=exist_ok)
 
     def put(self, filename, name=None):
         from ..vsbs import Blob
