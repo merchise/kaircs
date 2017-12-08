@@ -44,6 +44,12 @@ class FileSystem(object):
         # Create root if it doesn't exists
         self.mkdir('/', exists_ok=True)
         self.root = Directory('/', self)
+    def close(self):
+        self.files.close()
+        self.riak.close()
+
+    def __del__(self):
+        self.close()
 
     def mkdir(self, name, traverse=True, *args, **kwargs):
         '''Create directory under `name`.
