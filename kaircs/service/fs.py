@@ -100,9 +100,13 @@ class FileSystem(object):
 
     def put(self, filename, name=None):
         from ..vsbs import Blob
+        if not name:
+            name = filename
         blocksize = 4*Blob.CHUNK_SIZE
         with open(filename, 'rb') as file:
-            with self.open(name or filename, 'w') as write:
+            parent = dirname(name)
+            self.mkdir(parent, traverse=True, exist_ok=True)
+            with self.open(name, 'w') as write:
                 chunk = file.read(blocksize)
                 while len(chunk) == blocksize:
                     write(chunk)
