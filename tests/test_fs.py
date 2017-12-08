@@ -111,6 +111,19 @@ def test_open(path):
     fs.close()
 
 
+@given(paths(min_size=2))
+@settings(max_examples=10)
+def test_put(path):
+    import os.path
+    filename = os.path.join(os.path.dirname(__file__), 'blob')
+    fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
+                    'test_put', dir_bucket_type='maps')
+    fs.put(filename, name=path)
+    with open(filename, 'rb') as f:
+        contents = f.read()
+    assert fs.cat(path) == contents
+    fs.close()
+
 
 @given(paths())
 @settings(max_examples=10)
