@@ -80,16 +80,11 @@ class BlobStore(object):
         '''Put a file in the blob store.
 
         '''
-        blocksize = 4*Blob.CHUNK_SIZE
-        with open(filename, 'rb') as file:
-            with self.open(name or filename, 'w') as write:
-                chunk = file.read(blocksize)
-                while len(chunk) == blocksize:
-                    write(chunk)
-                    chunk = file.read(blocksize)
-                if len(chunk):
-                    write(chunk)
-            return write.first_chunk.blob
+        from shutil import copyfileobj
+        name = name or filename
+        with open(filename, 'rb') as source, self.open(name, 'w') as target:
+            copyfileobj(source, target, 4 * Blob.CHUNK_SIZE)
+            return target.first_chunk.blob
 
     def read(self, filename):
         '''Read a file in the blob store.

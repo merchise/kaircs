@@ -99,20 +99,15 @@ class FileSystem(object):
         _mkdir(name=name, traverse=traverse, exist_ok=exist_ok)
 
     def put(self, filename, name=None):
+        from shutil import copyfileobj
         from ..vsbs import Blob
         if not name:
             name = filename
-        blocksize = 4*Blob.CHUNK_SIZE
-        with open(filename, 'rb') as file:
+        with open(filename, 'rb') as source:
             parent = dirname(name)
             self.mkdir(parent, traverse=True, exist_ok=True)
-            with self.open(name, 'w') as write:
-                chunk = file.read(blocksize)
-                while len(chunk) == blocksize:
-                    write(chunk)
-                    chunk = file.read(blocksize)
-                if len(chunk):
-                    write(chunk)
+            with self.open(name, 'w') as target:
+                copyfileobj(source, target, 4 * Blob.CHUNK_SIZE)
 
     def exists(self, path):
         '''Test if a path exists.

@@ -56,16 +56,14 @@ class KairCSApplication(Flask):
             return FileStream(self, path)
 
     def PUT(self, path):
+        from shutil import copyfileobj
+        from ..vsbs import Blob
         dir = dirname(path)
         if self.exists(path) and self.isdir(path):
             raise BadRequest
         self.mkdir(dir, exist_ok=True)
-        with self.open(path, 'w') as file:
-            chunk_size = 4096  # FIXME: this should be a configuration option
-            chunk = request.stream.read(chunk_size)
-            while len(chunk) != 0:
-                file.write(chunk)
-                chunk = request.stream.read(chunk_size)
+        with self.open(path, 'w') as target:
+            copyfileobj(request.stream, target, 4 * Blob.CHUNK_SIZE)
         return Response(
             status=201
         )
