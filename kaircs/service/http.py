@@ -111,11 +111,10 @@ class FileStream(Resource):
     @property
     def contents(self):
         with self.app.open(self.path, 'r') as f:
-            res = f.read()
+            res = f.read(4096)
             while res:
-                tmp = res
-                res = f.read()
-                yield(tmp)
+                yield res
+                res = f.read(4096)
 
 
 class DirectoryStream(Resource):
