@@ -59,7 +59,7 @@ class KairCSApplication(Flask):
         dir = dirname(path)
         if self.exists(path) and self.isdir(path):
             raise BadRequest
-        self.mkdir(dir, exists_ok=True)
+        self.mkdir(dir, exist_ok=True)
         with self.open(path, 'w') as file:
             chunk_size = 4096  # FIXME: this should be a configuration option
             chunk = request.stream.read(chunk_size)

@@ -42,7 +42,7 @@ class FileSystem(object):
         dir_bucket_type = self.riak.bucket_type(dir_bucket_type)
         self.dirs = dir_bucket_type.bucket(dirs_store_name)
         # Create root if it doesn't exists
-        self.mkdir(ROOT, exists_ok=True)
+        self.mkdir(ROOT, exist_ok=True)
         self.root = Directory(ROOT, self)
 
     def close(self):
@@ -70,7 +70,7 @@ class FileSystem(object):
         pm = ParamManager(args, kwargs)
         exist_ok = pm(0, 'exist_ok', 'exists_ok', default=False)
 
-        def _mkdir(name, traverse, exists_ok):
+        def _mkdir(name, traverse, exist_ok):
             if not name.startswith(ROOT):
                 raise ValueError('Cannot create relative path "%s"' % name)
             directory = Directory(name, self)
@@ -80,7 +80,7 @@ class FileSystem(object):
                     parent = _mkdir(
                         parent.name,
                         traverse=traverse,
-                        exists_ok=True
+                        exist_ok=True
                     )
                 if self.exists(parent.name):
                     base = basename(name)
@@ -92,11 +92,11 @@ class FileSystem(object):
             else:
                 if not self.isdir(directory.name):
                     raise EnvironmentError('File "%s" already exists' % name)
-                elif not exists_ok:
+                elif not exist_ok:
                     raise EnvironmentError('Entry "%s" already exists' % name)
             return directory
 
-        _mkdir(name=name, traverse=traverse, exists_ok=exist_ok)
+        _mkdir(name=name, traverse=traverse, exist_ok=exist_ok)
 
     def put(self, filename, name=None):
         from ..vsbs import Blob
