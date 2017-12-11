@@ -76,11 +76,16 @@ class KairCSApplication(Flask):
         .. warning:: You should not reimplement this method to do an off-load
            of the deletion, instead override `rm`.
 
+        We always return '202 Accepted', even though the standard
+        implementation of `rm` actually deletes before we can return the
+        response; but the idea is to allow for simple overrides that does not
+        deal with HTTP status codes.
+
         '''
         if not self.exists(path):
             raise NotFound
         self.rm(path, recursive=True)
-        return Response(status=202)
+        return Response(status=202)  # Accepted
 
 
 class Resource(object):
