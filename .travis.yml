@@ -1,0 +1,42 @@
+sudo: required
+dist: trusty
+language: python
+python:
+  - '2.7'
+  - '3.3'
+  - '3.4'
+  - '3.5'
+  - '3.6'
+  - nightly
+addons:
+  hosts:
+    - riak-test
+install:
+  - pip install --upgrade pip setuptools flake8
+before_script:
+  - jdk_switcher use oraclejdk8
+  - sudo ./tools/travis-ci/riak-install -d "$RIAK_DOWNLOAD_URL"
+  - sudo ./tools/setup-riak -s
+env:
+  matrix:
+    - RIAK_TEST_PROTOCOL=pbc  RIAK_DOWNLOAD_URL=http://s3.amazonaws.com/downloads.basho.com/riak/2.0/2.0.7/ubuntu/trusty/riak_2.0.7-1_amd64.deb
+    - RIAK_TEST_PROTOCOL=http RIAK_DOWNLOAD_URL=http://s3.amazonaws.com/downloads.basho.com/riak/2.0/2.0.7/ubuntu/trusty/riak_2.0.7-1_amd64.deb
+    - RIAK_TEST_PROTOCOL=pbc  RIAK_DOWNLOAD_URL=http://s3.amazonaws.com/downloads.basho.com/riak/2.2/2.2.0/ubuntu/trusty/riak_2.2.0-1_amd64.deb
+    - RIAK_TEST_PROTOCOL=http RIAK_DOWNLOAD_URL=http://s3.amazonaws.com/downloads.basho.com/riak/2.2/2.2.0/ubuntu/trusty/riak_2.2.0-1_amd64.deb
+  global:
+    - RIAK_TEST_PB_PORT=8087
+    - RIAK_TEST_HTTP_PORT=8098
+    - RUN_BTYPES=1
+    - RUN_CLIENT=1
+    - RUN_MAPREDUCE=1
+    - RUN_KV=1
+    - RUN_RESOLVE=1
+    - RUN_YZ=1
+    - RUN_DATATYPES=1
+    - RUN_INDEXES=1
+    - RUN_SECURITY=0
+script:
+  - ./.travis.sh
+notifications:
+  slack:
+    secure: kU1XcvTAliCWKuYpMWEMbD4qkbmlnWGLAIKbBQjtIh5ZRzISgjdUFzGcC31eHoQFv12LQdp5KAFj0Y1FyEvLxi0W8VeWKpsBGc06ntuECaN9MNHRBzKKclrTMGTfpBWZ5IO17XSUu2lKaNz6GDGRkiZA+sxYAVPfZSXY3u86IuY=
