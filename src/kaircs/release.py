@@ -12,22 +12,19 @@ from __future__ import (division as _py3_division,
                         absolute_import as _py3_abs_imports)
 
 
-VERSION = '0.3.0'
-
-
-def dev_tag_installed():
+def _installed():
     import pkg_resources
     try:
         dist = pkg_resources.get_distribution('kaircs')
         full_version = dist.version
         # FIX: Below line is not working anymore
         base = dist.parsed_version.base_version
-        return full_version[len(base):]
+        return base or '', full_version[len(base):] or ''
     except Exception:
-        return None
+        return '', ''
 
 
-RELEASE_TAG = dev_tag_installed() or ''
+VERSION, RELEASE_TAG = _installed()
 
 
 def safe_int(x):
