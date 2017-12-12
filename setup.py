@@ -16,6 +16,13 @@ import sys
 import os
 from setuptools import setup, find_packages
 
+try:
+    import riak  # noqa
+    raise RuntimeError('Conflict with vendorized riak distribution')
+except ImportError:
+    pass
+
+
 # Import the version from the release module
 project_name = str('kaircs')
 _current_dir = os.path.dirname(os.path.abspath(__file__))
