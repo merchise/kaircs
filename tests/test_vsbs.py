@@ -36,6 +36,7 @@ def test_writer_reader_close_method():
         assert f.read() == content
     finally:
         f.close()
+    store.delete(name)
 
 
 def test_write_and_read_empty_file():
@@ -48,6 +49,7 @@ def test_write_and_read_empty_file():
     retrieved = store.read(name)
     assert len(retrieved) == len(content)
     assert retrieved == content
+    store.delete(name)
 
 
 @given(s.binary(min_size=1), s.binary(min_size=1))
@@ -59,6 +61,7 @@ def test_can_write_and_read(name, content):
     retrieved = store.read(name)
     assert len(retrieved) == len(content)
     assert retrieved == content
+    store.delete(name)
 
 
 @given(s.binary(min_size=1), s.integers(min_value=1, max_value=4))
@@ -72,6 +75,7 @@ def test_can_write_and_read_chunks(name, n):
     retrieved = store.read(name)
     assert len(retrieved) == len(content)
     assert retrieved == content
+    store.delete(name)
 
 
 @given(s.binary(min_size=1), s.binary(min_size=0))
@@ -86,3 +90,4 @@ def test_can_write_and_read_a_large_file(name, padding):
     retrieved = store.read(name)
     assert len(retrieved) == len(content)
     assert retrieved == content
+    store.delete(name)
