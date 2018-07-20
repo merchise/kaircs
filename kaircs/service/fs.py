@@ -52,6 +52,16 @@ class FileSystem(object):
     def __del__(self):
         self.close()
 
+    def _rmall(self):
+        '''Removes all files and directories in the FS.
+
+        This is NOT an API.  Only created for tests.
+
+        '''
+        for name in self.ls(ROOT):
+            if name != ROOT:
+                self.rm(name, recursive=True)
+
     def mkdir(self, name, traverse=True, *args, **kwargs):
         '''Create directory under `name`.
 

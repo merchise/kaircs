@@ -42,6 +42,7 @@ def test_traverse_mkdir(path):
                     'test_traverse_mkdir', dir_bucket_type='maps')
     fs.mkdir(path, exists_ok=True)
     assert fs.isdir(path) and fs.exists(path)
+    fs._rmall()
     fs.close()
 
 
@@ -54,6 +55,8 @@ def test_non_traverse_mkdir(path):
         fs.mkdir(path, traverse=False)
     assert 'No such file or directory' in str(excinfo.value)
     assert not fs.exists(path)
+    fs._rmall()
+    fs.close()
 
 
 @given(paths())
@@ -66,6 +69,7 @@ def test_already_exists_mkdir(path):
         fs.mkdir(path)
     assert 'already exists' in str(excinfo.value)
     assert fs.exists(path)
+    fs._rmall()
     fs.close()
 
 
@@ -77,6 +81,7 @@ def test_rm_dir(path):
     fs.mkdir(path, exists_ok=True)
     fs.rm(path, recursive=True)
     assert not fs.exists(path)
+    fs._rmall()
     fs.close()
 
 
@@ -93,6 +98,7 @@ def test_rm_file(path):
         f.write(content)
     fs.rm(fpath)
     assert not fs.exists(fpath)
+    fs._rmall()
     fs.close()
 
 
@@ -108,6 +114,7 @@ def test_open(path):
     with fs.open(fpath, 'w') as f:
         f.write(content)
     assert fs.cat(fpath) == content
+    fs._rmall()
     fs.close()
 
 
@@ -122,6 +129,7 @@ def test_put(path):
     with open(filename, 'rb') as f:
         contents = f.read()
     assert fs.cat(path) == contents
+    fs._rmall()
     fs.close()
 
 
@@ -148,4 +156,5 @@ def test_concurrent_read(path):
                 fc1 = f.read(10)
                 fc2 = j.read(10)
             assert c1 == c2
+    fs._rmall()
     fs.close()

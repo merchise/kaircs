@@ -252,6 +252,12 @@ class BlobReader(ClosingContextManager):
 
 class BlobWriter(ClosingContextManager):
     def __init__(self, blob, options=None):
+        try:
+            BlobChunk(blob, 0).get()
+        except KeyError:
+            pass
+        else:
+            raise ValueError('Cannot overwrite a blob')
         self.blob = blob
         self.metadata = blob.metadata
         self.written = 0
