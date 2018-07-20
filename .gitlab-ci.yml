@@ -23,8 +23,11 @@ build source distribution:
   tags:
     - python
   artifacts:
+    expire_in: 4 hours
     paths:
       - dist/
+  only:
+    - tags
 
 build binary distribution:
   stage: build
@@ -34,10 +37,13 @@ build binary distribution:
   tags:
     - wheel
   artifacts:
+    expire_in: 4 hours
     paths:
       - dist/
+  only:
+    - tags
 
-publish_locally:
+publish locally:
   stage: publish
   script:
     - ssh manu@gestion.lahavane.com "mkdir -p Repos/kaircs"
@@ -50,9 +56,11 @@ publish_locally:
     - check signature of tag
     - build source distribution
     - build binary distribution
+  only:
+    - tags
 
 
-publish_pypi:
+publish in pypi:
   stage: publish
   script:
     - twine upload dist/*
@@ -67,19 +75,8 @@ publish_pypi:
   environment:
     name: pypi
     url: https://pypi.python.org/pypi/kaircs
-
-
-clean_build:
-  stage: clean
-  script:
-    - rm -f dist/*
-  tags:
-    - python
-  when: always
-  allow_failure: true
-  dependencies:
-    - build source distribution
-    - build binary distribution
+  only:
+    - tags
 
 
 build documentation:
