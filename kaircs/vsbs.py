@@ -347,6 +347,7 @@ class BlobMetadata(object):
         msize, size, dirty = struct.unpack(self.HEADER_FMT, header)
         self.metadata_size = msize
         self.size = size
+        self.dirty = dirty
         if msize > self.HEADER_SIZE:
             metadata, data = rawdata[:msize], rawdata[msize:]
         else:
