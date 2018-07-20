@@ -308,22 +308,20 @@ class BlobWriter(ClosingContextManager):
     def close(self, **options):
         # At this point we know the size the of the blob so we can complete
         # the data of the first chunk and write it.
-        chunk = self.first_chunk
-        meta = chunk.metadata
+        first_chunk = self.first_chunk
+        meta = first_chunk.metadata
+        meta.dirty = False
         meta.size = self.written
-        assert self.chunk_size != Blob.CHUNK_SIZE
+        assert self.chunk_size < Blob.CHUNK_SIZE
         if 0 < self.chunk_size < Blob.CHUNK_SIZE:
             # The last chunk is still partially filled, we have to write it
             # now.
-            self.chunk.store(closing=True,
-                             store_options=dict(self.options, **options))
-        if chunk is not self.chunk:
-            chunk.store(closing=True,
-                        store_options=dict(self.options, **options))
+            self.chunk.store(store_options=dict(self.options, **options))
+        if first_chunk is not self.chunk:
+            first_chunk.store(store_options=dict(self.options, **options))
         elif self.chunk_size == 0:
             assert self.written == 0  # Empty file
-            chunk.store(closing=True,
-                        store_options=dict(self.options, **options))
+            first_chunk.store(store_options=dict(self.options, **options))
         self.chunk = None  # avoid more writing
 
 
@@ -372,15 +370,13 @@ class BlobChunk(object):
         self.data = data
         self.store(store_options=kwargs)
 
-    def store(self, closing=False, store_options=None):
+    def store(self, store_options=None):
         robj = self.riak_obj
         robj.content_type = 'application/octet-stream'
         if self.index:
             assert self.data
             robj.encoded_data = self.data
         else:
-            if closing:
-                self.metadata.dirty = False
             robj.encoded_data = self.metadata.header + self.data
         # If the 'vsbs' butcket type is a write-once w=1 should be redundant,
         # but let's be explicit in this case: We expect that that a chunk does
