@@ -3,7 +3,6 @@ stages:
   - check
   - build doc
   - publish doc
-  - test
   - build
   - publish
 
@@ -23,18 +22,6 @@ lint:
     - merchise_lint
   tags:
     - merchise-lint
-
-run all tests:
-  stage: test
-  image: python
-  services:
-    - riakkv
-  script:
-    - pip install tox
-  only:
-    - branches
-  except:
-    - tags
 
 build source distribution:
   stage: build
