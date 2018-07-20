@@ -98,11 +98,7 @@ def test_can_write_and_read_a_large_file(name, padding):
 def test_dirty_file(name):
     store = BlobStore({'host': '127.0.0.1', 'http_port': 8098}, 'store',
                       bucket_type=None)
-    try:
-        with store.open(name, 'w') as f:
-            f.write('Hello World')
-            raise RuntimeError
-    except RuntimeError:
-        pass
+    f = store.open(name, 'w')
+    f.write('Hello World')
     with pytest.raises(DirtyBlobError):
         store.open(name, 'r')
