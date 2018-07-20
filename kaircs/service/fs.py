@@ -161,7 +161,7 @@ class FileSystem(object):
             raise EnvironmentError('Recursive must be True to'
                                    'remove a directory')
         else:
-            l = self.ls(path, recursive=recursive)
+            l = self.ls(path, recursive=recursive)  # noqa: E741
             # ls return top down so we revert it to go up.
             l.reverse()
             for p in l:
