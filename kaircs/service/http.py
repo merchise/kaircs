@@ -25,6 +25,11 @@ from xoutil.future.codecs import safe_encode
 from xoutil.fp.tools import compose
 
 from .fs import FileSystem, basename, dirname
+from xoutil.objects import delegator
+
+
+DELEGATED_METHOD_NAMES = ('exists', 'isdir', 'open', 'mkdir', 'ls', 'rm')
+DELEGATED_METHODS_MAP = {k: k for k in DELEGATED_METHOD_NAMES}
 
 
 def with_normal_path(f):
@@ -33,19 +38,15 @@ def with_normal_path(f):
     return compose(f, partial(operator.add, b'/'), safe_encode, funnel)
 
 
-class KairCSApplication(Flask):
+class KairCSApplication(Flask, delegator('fs', DELEGATED_METHODS_MAP)):
     def __init__(self, fs):
         super(KairCSApplication, self).__init__(__name__)
-        self.add_url_rule('/', 'root', with_normal_path(self.GET), methods=['GET'])
-        self.add_url_rule('/<path:path>', 'get', with_normal_path(self.GET), methods=['GET'])
-        self.add_url_rule('/<path:path>', 'put', with_normal_path(self.PUT), methods=['PUT'])
-        self.add_url_rule('/<path:path>', 'del', with_normal_path(self.DELETE), methods=['DELETE'])
-        self.exists = fs.exists
-        self.isdir = fs.isdir
-        self.open = fs.open
-        self.mkdir = fs.mkdir
-        self.ls = fs.ls
-        self.rm = fs.rm
+        __ = with_normal_path
+        self.add_url_rule('/', 'root', __(self.GET), methods=['GET'])
+        self.add_url_rule('/<path:path>', 'get', __(self.GET), methods=['GET'])
+        self.add_url_rule('/<path:path>', 'put', __(self.PUT), methods=['PUT'])
+        self.add_url_rule('/<path:path>', 'del', __(self.DELETE), methods=['DELETE'])
+        self.fs = fs
 
     def GET(self, path=b''):
         if not self.exists(path):
