@@ -16,7 +16,8 @@ from __future__ import (division as _py3_division,
                         print_function as _py3_print,
                         absolute_import as _py3_abs_import)
 
-from kaircs.vsbs import BlobStore, Blob
+import pytest
+from kaircs.vsbs import BlobStore, Blob, DirtyBlobError
 from hypothesis import given, example, strategies as s
 
 
@@ -91,3 +92,17 @@ def test_can_write_and_read_a_large_file(name, padding):
     assert len(retrieved) == len(content)
     assert retrieved == content
     store.delete(name)
+
+
+@given(s.binary(min_size=1))
+def test_dirty_file(name):
+    store = BlobStore({'host': '127.0.0.1', 'http_port': 8098}, 'store',
+                      bucket_type=None)
+    try:
+        with store.open(name, 'w') as f:
+            f.write('Hello World')
+            raise RuntimeError
+    except RuntimeError:
+        pass
+    with pytest.raises(DirtyBlobError):
+        store.open(name, 'r')

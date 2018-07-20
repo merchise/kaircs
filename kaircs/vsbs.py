@@ -22,6 +22,10 @@ import struct
 from xoutil.eight import binary_type
 
 
+class DirtyBlobError(EnvironmentError):
+    pass
+
+
 class BlobStore(object):
     '''A Very Simple Blob Store.
 
@@ -311,31 +315,36 @@ class BlobWriter(ClosingContextManager):
         if 0 < self.chunk_size < Blob.CHUNK_SIZE:
             # The last chunk is still partially filled, we have to write it
             # now.
-            self.chunk.store(store_options=dict(self.options, **options))
+            self.chunk.store(closing=True,
+                             store_options=dict(self.options, **options))
         if chunk is not self.chunk:
-            chunk.store(store_options=dict(self.options, **options))
+            chunk.store(closing=True,
+                        store_options=dict(self.options, **options))
         elif self.chunk_size == 0:
             assert self.written == 0  # Empty file
-            chunk.store(store_options=dict(self.options, **options))
+            chunk.store(closing=True,
+                        store_options=dict(self.options, **options))
         self.chunk = None  # avoid more writing
 
 
 class BlobMetadata(object):
-    HEADER_FMT = '<BQ'
+    HEADER_FMT = '<BQ?'
     HEADER_SIZE = struct.calcsize(HEADER_FMT)
 
     def __init__(self):
         self.metadata_size = None
         self.size = None
+        self.dirty = True
 
     @property
     def header(self):
-        return struct.pack(self.HEADER_FMT, self.HEADER_SIZE, self.size)
+        return struct.pack(self.HEADER_FMT, self.HEADER_SIZE, self.size,
+                           self.dirty)
 
     def extract(self, rawdata):
         assert len(rawdata) >= self.HEADER_SIZE
         header, data = rawdata[:self.HEADER_SIZE], rawdata[self.HEADER_SIZE:]
-        msize, size = struct.unpack(self.HEADER_FMT, header)
+        msize, size, dirty = struct.unpack(self.HEADER_FMT, header)
         self.metadata_size = msize
         self.size = size
         if msize > self.HEADER_SIZE:
@@ -369,6 +378,8 @@ class BlobChunk(object):
             assert self.data
             robj.encoded_data = self.data
         else:
+            if closing:
+                self.metadata.dirty = False
             robj.encoded_data = self.metadata.header + self.data
         # If the 'vsbs' butcket type is a write-once w=1 should be redundant,
         # but let's be explicit in this case: We expect that that a chunk does
@@ -390,6 +401,8 @@ class BlobChunk(object):
             data = robj.encoded_data
         else:
             _, data = self.metadata.extract(robj.encoded_data)
+            if self.metadata.dirty:
+                raise DirtyBlobError
         return data
 
     def delete(self):
