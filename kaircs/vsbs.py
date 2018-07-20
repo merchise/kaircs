@@ -288,7 +288,7 @@ class BlobWriter(ClosingContextManager):
                     # because we need to append the blob's metadata which
                     # includes the size of the blob, and we don't know that
                     # until the end of the write.
-                    chunk.store(**dict(self.options, **options))
+                    chunk.store(store_options=dict(self.options, **options))
                 self.chunk = chunk = BlobChunk(self.blob, chunk.index + 1)
                 self.chunk_size = 0
         self.written += size
@@ -305,12 +305,12 @@ class BlobWriter(ClosingContextManager):
         if 0 < self.chunk_size < Blob.CHUNK_SIZE:
             # The last chunk is still partially filled, we have to write it
             # now.
-            self.chunk.store(**dict(self.options, **options))
+            self.chunk.store(store_options=dict(self.options, **options))
         if chunk is not self.chunk:
-            chunk.store(**dict(self.options, **options))
+            chunk.store(store_options=dict(self.options, **options))
         elif self.chunk_size == 0:
             assert self.written == 0  # Empty file
-            chunk.store(**dict(self.options, **options))
+            chunk.store(store_options=dict(self.options, **options))
         self.chunk = None  # avoid more writing
 
 
@@ -354,9 +354,9 @@ class BlobChunk(object):
 
     def put(self, data, **kwargs):
         self.data = data
-        self.store(**kwargs)
+        self.store(store_options=kwargs)
 
-    def store(self, **kwargs):
+    def store(self, closing=False, store_options=None):
         robj = self.riak_obj
         robj.content_type = 'application/octet-stream'
         if self.index:
@@ -370,8 +370,10 @@ class BlobChunk(object):
         # under normal (non failure) operations.  Setting w=1 allows to have
         # lower latency even if write-once is not set.  At the same time, we
         # will allow other values for 'w' if needed by the client.
-        kwargs.setdefault('w', 1)
-        robj.store(**kwargs)
+        if not store_options:
+            store_options = {}
+        store_options.setdefault('w', 1)
+        robj.store(**store_options)
 
     def get(self):
         robj = self.riak_obj
