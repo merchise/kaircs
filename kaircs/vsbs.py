@@ -262,6 +262,11 @@ class BlobWriter(ClosingContextManager):
             pass
         else:
             raise ValueError('Cannot overwrite a blob')
+        # Store the first chunk in Riak KV so that:
+        #
+        # - We know that there's a partial (dirty=True) blob there.
+        # - We can recover from such issues.
+        BlobChunk(blob, 0).store()
         self.blob = blob
         self.metadata = blob.metadata
         self.written = 0
@@ -331,7 +336,7 @@ class BlobMetadata(object):
 
     def __init__(self):
         self.metadata_size = None
-        self.size = None
+        self.size = 0
         self.dirty = True
 
     @property
