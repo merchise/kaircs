@@ -53,14 +53,15 @@ is like this::
 
       uint8 metadata_size;
       # The size of the metadata excluding this byte.  Currently this
-      # is 1 + 8 bytes.
+      # is 1 + 8 + 1 bytes.
 
       uint64 size_of_the_blob;
+      bool dirty;
   }
 
-The maximum size of the first chunk is thus 1 MB plus 9 bytes. Other
-chunks are just data and the size of the chunk is the size of the
-data.
+The maximum size of the first chunk is thus 1 MB plus the size of the metadata
+(10 bytes). Other chunks are just data and the size of the chunk is the size
+of the data.
 
 To write a blob you need the name and the size. To read a blob you
 just need the name.
