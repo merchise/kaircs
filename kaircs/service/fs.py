@@ -13,9 +13,11 @@ from __future__ import (division as _py3_division,
                         print_function as _py3_print,
                         absolute_import as _py3_abs_import)
 import os
+from xoutil.eight.string import force as safestr
+
 from kaircs.vsbs import BlobStore
 
-ROOT = b'/'
+ROOT = '/'
 
 
 class FileSystem(object):
@@ -32,6 +34,7 @@ class FileSystem(object):
                  dir_bucket_type=None):
         from riak import RiakClient
         self.riak = RiakClient(nodes=nodes)
+        name = safestr(name)
         files_store_name = '%s-files' % name
         dirs_store_name = '%s-dirs' % name
         self.files = BlobStore(
@@ -156,7 +159,7 @@ class FileSystem(object):
             raise EnvironmentError('Recursive must be True to'
                                    'remove a directory')
         else:
-            l = self.ls(path, recursive=recursive)
+            l = self.ls(path, recursive=recursive)  # noqa
             # ls return top down so we revert it to go up.
             l.reverse()
             for p in l:
@@ -281,13 +284,12 @@ class Directory(Entry):
         return basename(item.name) in self.children
 
     def __setitem__(self, key, value):
-        from xoutil.future.codecs import safe_encode
         if isinstance(key, Entry):
             dirname, basename = split(key.name)
             assert dirname == self.name
         else:
             basename = key
-        assert safe_encode(os.path.sep) not in basename
+        assert safestr(os.path.sep) not in basename
         assert isinstance(value, Entry)
         self.registers[basename].assign(value.hash)
         self.registers.map.store()
@@ -357,5 +359,4 @@ def normalize(path):
 
     '''
     from os.path import realpath, normpath
-    from xoutil.future.codecs import safe_encode
-    return safe_encode(realpath(normpath(path)))
+    return safestr(realpath(normpath(path)))
