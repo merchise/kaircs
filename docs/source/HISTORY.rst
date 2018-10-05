@@ -8,6 +8,17 @@
 These are the first releases.  Expected unstable API and lots of bug.  Put it
 on production at your own risk.
 
+2018-10-05.  Release 0.4.0
+--------------------------
+
+- Support for Python 2.7, Python 3.6 and Python 3.7 has been added.
+
+  .. warning:: The last published version of `riak
+     <https://pypi.org/project/riak>`__ in the PyPI doesn't work in Python 3;
+     so we embed the latest `development
+     <https://github.com/basho/riak-python-client>`__ in this package.  This
+     means you cannot install this alongside the riak package.
+
 
 2017-12-08. Release 0.3.0
 -------------------------
