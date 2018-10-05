@@ -24,15 +24,14 @@ from hypothesis import given, strategies as s, settings
 
 
 @s.composite
-def path_components(draw, from_=s.text(alphabet='abcd', min_size=1)):
-    from xoutil.future.codecs import safe_encode
-    return safe_encode(draw(from_))
+def path_components(draw, from_=s.text(alphabet='abcdxyz', min_size=1)):
+    return draw(from_)
 
 
 @s.composite
 def paths(draw, min_size=1, max_size=3, components=path_components()):
     res = draw(s.lists(components, min_size=min_size, max_size=max_size))
-    return b'/' + b'/'.join(res)
+    return '/' + '/'.join(res)
 
 
 @given(paths())

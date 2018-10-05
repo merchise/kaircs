@@ -19,7 +19,7 @@ import math
 import hashlib
 import struct
 
-from xoutil.eight import binary_type
+from xoutil.eight import binary_type, text_type
 
 
 class DirtyBlobError(EnvironmentError):
@@ -58,7 +58,7 @@ class BlobStore(object):
     def __del__(self):
         self.close()
 
-    def open(self, name, mode='r'):
+    def open(self, name, mode='r', fs_encoding=None):
         '''Open a Blob within the store to either write or read.
 
         The returned object will have only a `read <BlobReader.read>`:meth: or
@@ -68,8 +68,10 @@ class BlobStore(object):
         :type name: bytes
 
         '''
-        if not isinstance(name, binary_type):
-            raise TypeError('Blob names must be bytes')
+        if isinstance(name, text_type):
+            name = name.encode('utf-8')
+        elif not isinstance(name, binary_type):
+            raise TypeError('Blob names must be bytes/str')
         if not name:
             raise ValueError('Blob name cannot be empty')
         blob = Blob(name, self)
@@ -117,6 +119,8 @@ class BlobStore(object):
 
     def delete(self, name):
         '''Delete a blob.'''
+        if isinstance(name, text_type):
+            name = name.encode('utf-8')
         Blob(name, self).delete()
 
 
