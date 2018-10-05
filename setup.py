@@ -6,21 +6,35 @@
 #
 # This is free software; you can do what the LICENCE file allows you to.
 #
-# flake8: noqa
-
 from __future__ import (division as _py3_division,
                         print_function as _py3_print,
                         unicode_literals as _py3_unicode)
-                        # XXX: Don't put absolute imports in setup.py
+                        # XXX: Don't put absolute imports in setup.py  # noqa
 
-import sys, os
+import sys
+import os
+
 from setuptools import setup, find_packages
 
 # Import the version from the release module
 project_name = str('kaircs')
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(_current_dir, project_name))
-from release import VERSION as version
+from release import VERSION as version  # noqa
+
+install_requires = [
+    'xoutil>=1.9.3',
+    'six >= 1.8.0',
+    'basho_erlastic >= 2.1.1',
+    'flask>=0.12.2',
+]
+
+if sys.version_info[:3] <= (2, 7, 9):
+    install_requires.append("pyOpenSSL >= 0.14")
+if sys.version_info[:3] <= (3, 0, 0):
+    install_requires.append('protobuf >=2.4.1, <2.7.0')
+else:
+    install_requires.append('python3_protobuf >=2.4.1, <2.6.0')
 
 setup(
     name=project_name,
@@ -40,9 +54,5 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[
-        'xoutil>=1.8.0,<1.9',
-        'riak>=2.7,<2.8',
-        'flask>=0.12.2',
-    ],
+    install_requires=install_requires,
 )
