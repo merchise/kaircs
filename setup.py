@@ -23,7 +23,8 @@ sys.path.append(os.path.join(_current_dir, project_name))
 from release import VERSION as version  # noqa
 
 install_requires = [
-    'xoutil>=1.9.3',
+    'xoutil>=1.9.3,<2.0;python_version<"3.6"',
+    'xoutil>=1.9.3;python_version>="3.6"',
     'six >= 1.8.0',
     'basho_erlastic >= 2.1.1',
     'flask>=0.12.2',
