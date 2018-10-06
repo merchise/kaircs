@@ -18,6 +18,7 @@ check signature of tag:
 
 lint:
   stage: check
+  allow_failure: true
   script:
     - merchise_lint
   tags:
