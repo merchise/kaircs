@@ -19,7 +19,7 @@ from __future__ import (division as _py3_division,
 
 import pytest
 
-from kaircs.service.fs import FileSystem
+from kaircs.service.fs import FileSystem, ROOT
 from hypothesis import given, strategies as s, settings
 
 
@@ -32,6 +32,13 @@ def path_components(draw, from_=s.text(alphabet='abcdxyz', min_size=1)):
 def paths(draw, min_size=1, max_size=3, components=path_components()):
     res = draw(s.lists(components, min_size=min_size, max_size=max_size))
     return '/' + '/'.join(res)
+
+
+def test_root_exists():
+    fs = FileSystem([{'host': '127.0.0.1', 'http_port': 8098}],
+                    'test_root_exists', dir_bucket_type='maps')
+    assert fs.exists(ROOT) and fs.isdir(ROOT)
+    fs.close()
 
 
 @given(paths())
