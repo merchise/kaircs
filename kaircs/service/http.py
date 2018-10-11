@@ -21,7 +21,7 @@ from flask import Flask, request
 from werkzeug.wrappers import Response
 from werkzeug.exceptions import NotFound, BadRequest
 
-from xoutil.future.codecs import safe_encode
+from xoutil.eight.string import force as safestr
 from xoutil.fp.tools import compose
 
 from .fs import FileSystem, basename, dirname
@@ -35,7 +35,7 @@ DELEGATED_METHODS_MAP = {k: k for k in DELEGATED_METHOD_NAMES}
 def with_normal_path(f):
     def funnel(path=b''):
         return path
-    return compose(f, partial(operator.add, b'/'), safe_encode, funnel)
+    return compose(f, partial(operator.add, '/'), safestr, funnel)
 
 
 class KairCSApplication(Flask, delegator('fs', DELEGATED_METHODS_MAP)):
@@ -48,7 +48,7 @@ class KairCSApplication(Flask, delegator('fs', DELEGATED_METHODS_MAP)):
         self.add_url_rule('/<path:path>', 'del', __(self.DELETE), methods=['DELETE'])
         self.fs = fs
 
-    def GET(self, path=b''):
+    def GET(self, path=''):
         if not self.exists(path):
             raise NotFound
         if self.isdir(path):
